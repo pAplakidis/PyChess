@@ -10,19 +10,19 @@ data_dir = "data/"
 def get_data():
   X, Y = [], []
   results = {'1/2-1/2': 0, '0-1': 1, '1-0': 1}  # determines who won
+  games_parsed = 0
 
   for idx, data_file in enumerate(sorted(os.listdir(data_dir))[1:]):
     print("(%d/%d) Processing: %s"%(idx+1, len(os.listdir(data_dir))-1, data_file))
     pgn = open(os.path.join(data_dir, data_file))
     while 1:
-      try:
-        game = chess.pgn.read_game(pgn)
-      except UnicodeDecodeError:
-        print("UnicodeDecodeError: skipping current file")
-        continue
+      # TODO: file 13/27 crashes
+      game = chess.pgn.read_game(pgn)
 
       if game is None:
         break
+
+      games += 1
 
       res = game.headers['Result']
       if res not in results:
@@ -35,6 +35,7 @@ def get_data():
         #print(move) # TODO: need to serialize moves into a suitable tensor
         # TODO: append to X and Y
 
+  print("[+] %d Games Parsed"%games_parsed)
   return np.array(X), np.array(Y)
 
 
