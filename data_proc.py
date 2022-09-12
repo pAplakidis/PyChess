@@ -3,7 +3,8 @@ import chess.pgn
 import os
 from tqdm import trange
 import numpy as np
-import torch
+
+from util import State
 
 data_dir = "data/"
 
@@ -32,8 +33,13 @@ def get_data():
       board = game.board()
       for i, move in enumerate(game.mainline_moves()):
         board.push(move)
-        #print(move) # TODO: need to serialize moves into a suitable tensor
-        # TODO: append to X and Y
+        print(move)
+        serialized_board = State(board).serialize()
+        print(board)
+        print(serialized_board)
+        X.append(serialized_board)
+        Y.append(winner)  # TODO: maybe Y can be the next move?
+        exit(0)
 
   print("[+] %d Games Parsed"%games_parsed)
   return np.array(X), np.array(Y)
