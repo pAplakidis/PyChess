@@ -8,7 +8,7 @@ from util import State
 
 data_dir = "data/"
 
-def get_data():
+def get_data(g_limit=None):
   X, Y = [], []
   results = {'1/2-1/2': 0, '0-1': 1, '1-0': 1}  # determines who won
 
@@ -24,6 +24,8 @@ def get_data():
         continue
 
       if game is None:
+        break
+      if g_limit is not None and game_idx >= g_limit:
         break
 
       game_idx += 1
@@ -44,22 +46,18 @@ def get_data():
       for i, move in enumerate(game.mainline_moves()):
         print("Move", i, end="\r")
         board.push(move)
-        serialized_board = State(board).serialize()
-        # TODO: X, Y shapes are not right
-        X.append(serialized_board)
-        Y.append(winner)
+        #serialized_board = State(board).serialize()
+        X_temp = State(board).to_net_input()
+        X.append(serialized_board)  # TODO: X should not just be the board, but the STATE
+        #Y.append(winner)
         if i != 0:
           next_move = move
         if next_move is not None:
-          Y.append(next_move)
+          Y.append(next_move) # TODO: need to preprocess Y into tensor (size of all possible moves? map move strings to array and make it classification? maybe make it regression?)
 
-        """
-        print(board)
-        print(serialized_board)
-        print(move)
-        print(next_move)
-        """
-    print("%d game parsed"%game_idx)
+      del X[-1]
+
+    print("%d games parsed"%game_idx)
     break
 
   return np.array(X), np.array(Y)
@@ -68,6 +66,6 @@ def get_data():
 
 if __name__ == '__main__':
   X, Y = get_data()
-  print(len(X))
-  print(len(Y))
+  print(len(X), "boards (X)")
+  print(len(Y), "next moves (Y)")
 
