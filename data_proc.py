@@ -8,7 +8,8 @@ from util import State
 
 data_dir = "data/"
 
-def get_data(g_limit=None):
+# TODO: g_limit will be the size of train data, if test=True then the rest of the data will be for evaluation
+def get_data(g_limit=None, test=False):
   X, Y = [], []
   results = {'1/2-1/2': 0, '0-1': 1, '1-0': 1}  # determines who won
 
