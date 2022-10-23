@@ -23,3 +23,10 @@ class State:
 
   def edges(self):
     return list(self.board.legal_moves)
+
+  # makes 
+  def to_net_input(self):
+    s_board = serialize()
+    # TODO: pass info about the game, such as who's turn it is, etc
+    return s_board
+
