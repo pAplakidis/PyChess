@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class PolicyNet(nn.Module):
+# TODO: write this (output tensor of single value from tanh)
+class ValueNet(nn.Module):
   def __init__(self):
     super(PolicyNet, self).__init__()
 
