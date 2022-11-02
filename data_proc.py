@@ -15,7 +15,7 @@ def get_data(g_limit=None, test=False):
   results = {'1/2-1/2': 0, '0-1': 1, '1-0': 1}  # determines who won
   games_parsed = 0
 
-  for idx, data_file in enumerate(sorted(os.listdir(data_dir))[1:]):
+  for idx, data_file in enumerate(sorted(os.listdir(data_dir))[1:-1]):
     print("(%d/%d) Processing: %s"%(idx+1, len(os.listdir(data_dir))-1, data_file))
     pgn = open(os.path.join(data_dir, data_file))
     game_idx = 0
@@ -28,13 +28,9 @@ def get_data(g_limit=None, test=False):
       if g_limit is not None and game_idx >= g_limit:
         break
 
-<<<<<<< HEAD
-      games += 1
-
-=======
+      games_parsed += 1
       game_idx += 1
       print("Extracting data from game:", game_idx)
->>>>>>> 57d8bc029c1a6b456c2f4fa021b64e575ee02375
       res = game.headers['Result']
       if res not in results:
         continue
@@ -64,8 +60,7 @@ def get_data(g_limit=None, test=False):
       del X[-1]
         """
 
-    print("%d games parsed"%game_idx)
-    break
+    print("%d total games parsed"%game_idx)
 
   print("[+] %d Games Parsed"%games_parsed)
   return np.array(X), np.array(Y)
@@ -73,9 +68,9 @@ def get_data(g_limit=None, test=False):
 
 
 if __name__ == '__main__':
-  X, Y = get_data()
+  X, Y = get_data(500)
   print(len(X), "boards (X)")
   print(len(Y), "next moves (Y)")
-  print(Y)
   np.savez(s_data_path, X, Y)
+  print("Processed data files saved at:", s_data_path)
 

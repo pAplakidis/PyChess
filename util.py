@@ -26,7 +26,7 @@ class State:
 
   # makes 
   def to_net_input(self):
-    s_board = serialize()
+    s_board = self.serialize()
     # TODO: pass info about the game, such as who's turn it is, etc
     return s_board
 
