@@ -5,7 +5,7 @@ import torch.nn.functional as F
 # TODO: write this (output tensor of single value from tanh)
 class ValueNet(nn.Module):
   def __init__(self):
-    super(PolicyNet, self).__init__()
+    super(ValueNet, self).__init__()
 
   def forward(x):
     return x
@@ -21,4 +21,5 @@ def load_model(model, path, val=False)
   else:
     model.train()
   print("Loaded model from:", path)
+  return model
 
