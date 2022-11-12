@@ -1,4 +1,5 @@
 .*.swp
 data/
 __pycache__/
+colab/.ipynb_checkpoints/
 
