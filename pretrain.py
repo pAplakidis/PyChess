@@ -1,44 +1,97 @@
-import torch
+#!/usr/bin/env python3
+import chess
+import chess.pgn
 import numpy as np
-from tqdm import trange
+from tqdm.notebook import trange
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import plot
+
+import torch
+import torch.nn as nn
+import torch.functional as F
+from torch.utils.tensorboard import SummaryWriter
 
 from util import *
-from model import *
 from data_proc import *
+from model import *
 
-# NOTE: this script trains the model on human data first
-# TODO: add tensorboard support
-
-model_path = "models/pnet.pth"
 
 def train(model, X_train, Y_train, X_test=None, Y_test=None):
-  lr = 0.001
-  epochs = 100
+  model.train()
+  
+  lr = 1e-3
+  #epochs = 100
+  epochs = 10
   BS = 128
 
-  loss = nn.BCELoss()
+  losses, accuracies = [], []
+
+  #loss_func = nn.BCELoss()  # TODO: different loss!!! (regression at [-1, 1])
+  loss_func = nn.MSELoss()
   optim = torch.optim.Adam(model.parameters(), lr=lr)
 
-  for epoch in epochs:
+  for epoch in range(epochs):
     print("[+] Epoch", epoch+1)
+    epoch_losses = []
+    #epoch_acc = []  # TODO: no accuracy, not classification !!!
     for i in (t := trange(0, len(X_train), BS)):
-      X = torch.tensor(X_train).float().to(device)
-      Y = torch.tensor(Y_train).float().to(device)
+      X = torch.tensor(X_train[i:i+BS]).float().to(device)
+      Y = torch.tensor(Y_train[i:i+BS]).float().to(device)
 
       optim.zero_grad()
       out = model(X)
-      # TODO: write this
+      #cat = torch.round(out)
+      #accuracy = (cat == Y).float().mean()
+      loss = loss_func(out, Y).mean()
+      loss.backward()
+      optim.step()
 
-def eval():
-  pass
+      # TODO: stats (add tensorboard as well)
+      #epoch_acc.append(accuracy.item())
+      epoch_losses.append(loss.item())
+      #epoch_acc.append(accuracy.item())
+      #t.set_description("loss %.2f, acc %.2f"%(loss, accuracy))
+      t.set_description("loss %.2f"%(loss))
+      
+    #avg_acc = np.array(epoch_acc).mean()
+    avg_loss = np.array(epoch_losses).mean()
+    #print("[~] Avg Epoch Loss %.2f - Accuracy %.2f"%(avg_acc, avg_loss))
+    print("[~] Avg Epoch Loss %.2f"%(avg_loss))
+    #accuracies.append(avg_acc)
+    losses.append(avg_loss)
+
+  print("[+] Training Done!")
+  plt.plot(losses)
+  #plt.plot(accuracies)
+  plt.show()
+
+def eval(model, X_test, Y_test):
+  model.eval()
 
 
 if __name__ == '__main__':
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   print(device)
 
-  X_train, Y_train = get_data(1000)
-  model = PolicyNet().to(device).train()
+  data_path = "data/preprocessed/full_dataset.npz"
+  model_path = "models/chess_model.pth"
+
+  data = np.load(data_path)
+  X_train, Yt = data.f.arr_0, data.f.arr_1
+
+  Y_train = []
+  for y in Yt:
+    Y_train.append([y])
+  Y_train = np.array(Y_train)
+
+  print(X_train.shape)
+  print(Y_train.shape)
+  print(X_train)
+  print(Y_train)
+
+  model = ValueNet(X_train.shape[1], 1).to(device)
+  print(model)
+
   train(model, X_train, Y_train)
   save_model(model, model_path)
 
