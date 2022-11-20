@@ -16,53 +16,42 @@ from data_proc import *
 from model import *
 
 
-def train(model, X_train, Y_train, X_test=None, Y_test=None):
+def train(model, X_train, Y_train, X_test=None, Y_test=None, writer=None):
   model.train()
   
   lr = 1e-3
-  #epochs = 100
-  epochs = 10
-  BS = 128
+  epochs = 100
+  BS = 512
 
   losses, accuracies = [], []
 
-  #loss_func = nn.BCELoss()  # TODO: different loss!!! (regression at [-1, 1])
-  loss_func = nn.MSELoss()
+  loss_func = nn.MSELoss()  # find a better loss (output is in [-1,1])
   optim = torch.optim.Adam(model.parameters(), lr=lr)
 
   for epoch in range(epochs):
     print("[+] Epoch", epoch+1)
     epoch_losses = []
-    #epoch_acc = []  # TODO: no accuracy, not classification !!!
     for i in (t := trange(0, len(X_train), BS)):
       X = torch.tensor(X_train[i:i+BS]).float().to(device)
       Y = torch.tensor(Y_train[i:i+BS]).float().to(device)
 
       optim.zero_grad()
       out = model(X)
-      #cat = torch.round(out)
-      #accuracy = (cat == Y).float().mean()
       loss = loss_func(out, Y).mean()
       loss.backward()
       optim.step()
 
-      # TODO: stats (add tensorboard as well)
-      #epoch_acc.append(accuracy.item())
+      # TODO: evaluate after each epoch
+      writer.add_scalar('training loss', loss.item()/1000, epoch*len(X_train)+i)
       epoch_losses.append(loss.item())
-      #epoch_acc.append(accuracy.item())
-      #t.set_description("loss %.2f, acc %.2f"%(loss, accuracy))
       t.set_description("loss %.2f"%(loss))
       
-    #avg_acc = np.array(epoch_acc).mean()
     avg_loss = np.array(epoch_losses).mean()
-    #print("[~] Avg Epoch Loss %.2f - Accuracy %.2f"%(avg_acc, avg_loss))
     print("[~] Avg Epoch Loss %.2f"%(avg_loss))
-    #accuracies.append(avg_acc)
     losses.append(avg_loss)
 
   print("[+] Training Done!")
   plt.plot(losses)
-  #plt.plot(accuracies)
   plt.show()
 
 def eval(model, X_test, Y_test):
@@ -75,6 +64,7 @@ if __name__ == '__main__':
 
   data_path = "data/preprocessed/full_dataset.npz"
   model_path = "models/chess_model.pth"
+  writer = SummaryWriter("tensorboard_runs/pretrain_exp1")
 
   data = np.load(data_path)
   X_train, Yt = data.f.arr_0, data.f.arr_1
@@ -89,9 +79,10 @@ if __name__ == '__main__':
   print(X_train)
   print(Y_train)
 
+
   model = ValueNet(X_train.shape[1], 1).to(device)
   print(model)
 
-  train(model, X_train, Y_train)
+  train(model, X_train, Y_train, writer=writer)
   save_model(model, model_path)
 
